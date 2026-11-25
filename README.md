@@ -1,36 +1,136 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Gestionnaire de Pointage (نظام تدبير الحضور والانضباط)
 
-## Getting Started
+Application web full-stack de gestion du pointage quotidien avec contrôle d'accès basé sur les rôles (**ADMIN** et **SECURITY**), interface bilingue **Arabe / Français** (RTL / LTR), thèmes **Sombre / Clair** (Dark / Light), et design **Liquid Glass** adapté aux mobiles et ordinateurs.
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## ✨ Fonctionnalités principales
+
+- **Authentification & Sécurité (`NextAuth.js` + `bcryptjs`)**:
+  - Connexion sécurisée avec gestion de session et vérification des rôles (`ADMIN` / `SECURITY`).
+  - Support de `AUTH_TRUST_HOST=true` pour les environnements de production et déploiements cloud.
+- **Gestion des Employés (`CRUD`)**:
+  - Création, consultation, modification, et suppression des fiches employés (`matricule`, `nomComplet`, `poste`, `departement`, statut actif/inactif).
+- **Pointage Journalier (`/pointage`)**:
+  - Saisie manuelle des heures d'entrée et de sortie (`HH:MM`) avec bouton rapide **"Maintenant / الآن"**.
+  - Calcul automatique des retards / départs anticipés et code couleur visuel (**Vert** à l'heure / **Rouge** en retard ou avance).
+  - Traçabilité de l'agent (`enregistreParId`) ayant enregistré le pointage.
+- **Tableau de Bord, Récompenses & Paramètres (`/dashboard`)**:
+  - Statistiques du jour (employés actifs, pointés, à l'heure en vert, en retard en rouge).
+  - Classement **Top 5** des employés les plus ponctuels (récompenses/discipline) et **Top 5** des plus grands retards (filtrable par période : semaine, mois, année, tout).
+  - Configuration manuelle des horaires de référence (`heureEntreeStandard`, `heureSortieStandard`, `margeToleranceMinutes`).
+- **Gestion des Utilisateurs & Agents de Sécurité (`/users`)**:
+  - Ajout, activation/désactivation, modification (y compris réinitialisation du mot de passe), et suppression des comptes `SECURITY` et `ADMIN`.
+
+---
+
+## 🛠️ Stack Technique
+
+- **Framework**: Next.js 16 (App Router, Turbopack)
+- **Langage**: TypeScript
+- **Base de données & ORM**: PostgreSQL (Neon) avec Prisma ORM
+- **Authentification**: NextAuth.js
+- **Validation**: Zod
+- **UI & Styles**: Tailwind CSS (Design Liquid Glass, Dark/Light mode, AR/FR)
+
+---
+
+## 📁 Structure du projet
+
+```text
+gestion-pointage/
+├── prisma/
+│   └── schema.prisma
+├── src/
+│   ├── app/
+│   │   ├── api/
+│   │   │   ├── auth/[...nextauth]/route.ts
+│   │   │   ├── dashboard/route.ts
+│   │   │   ├── employees/
+│   │   │   │   ├── route.ts
+│   │   │   │   └── [id]/route.ts
+│   │   │   ├── pointage/route.ts
+│   │   │   └── users/
+│   │   │       ├── route.ts
+│   │   │       └── [id]/route.ts
+│   │   ├── dashboard/page.tsx
+│   │   ├── employees/page.tsx
+│   │   ├── login/page.tsx
+│   │   ├── pointage/page.tsx
+│   │   ├── users/page.tsx
+│   │   ├── globals.css
+│   │   ├── layout.tsx
+│   │   └── page.tsx
+│   ├── lib/
+│   │   ├── auth.ts
+│   │   └── prisma.ts
+│   ├── types/
+│   │   └── next-auth.d.ts
+│   └── middleware.ts
+├── package.json
+└── README.md
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## ⚙️ Installation et lancement en local
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 1. Cloner le dépôt et installer les dépendances
 
-## Learn More
+```bash
+git clone [https://github.com/DarkMed04/gestion-pointage.git](https://github.com/DarkMed04/gestion-pointage.git)
+cd gestion-pointage
+npm install
+```
 
-To learn more about Next.js, take a look at the following resources:
+### 2. Configurer les variables d'environnement
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Créez un fichier `.env` à la racine du projet :
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```env
+DATABASE_URL="postgresql://USER:PASSWORD@HOST/DATABASE?sslmode=require"
+AUTH_SECRET="votre_cle_secrete_robuste"
+AUTH_TRUST_HOST=true
+```
 
-## Deploy on Vercel
+### 3. Synchroniser le schéma Prisma et générer le client
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+npx prisma generate
+npx prisma db push
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### 4. Lancer en développement ou en production locale
+
+```bash
+# Développement
+npm run dev
+
+# Build & Production locale
+npm run build
+npm run start
+```
+
+---
+
+## 🚀 Déploiement sur Vercel
+
+1. Importez le dépôt `DarkMed04/gestion-pointage` sur **Vercel**.
+2. Ajoutez les variables d'environnement dans **Settings → Environment Variables** :
+   - `DATABASE_URL`
+   - `AUTH_SECRET`
+   - `AUTH_TRUST_HOST` = `true`
+3. Assurez-vous que le script de build exécute bien Prisma :
+   ```json
+   "build": "prisma generate && next build",
+   "postinstall": "prisma generate"
+   ```
+4. Lancez le **Deploy** puis vérifiez l'accès aux routes `/login`, `/dashboard`, `/employees`, `/pointage`, et `/users`.
+
+---
+
+## 🔐 Bonnes pratiques de sécurité
+
+- Ne jamais commiter le fichier `.env` contenant les identifiants de base de données ou `AUTH_SECRET`.
+- Changer tout mot de passe initial/par défaut immédiatement après la mise en ligne depuis `/users`.
+- Effectuer une rotation du mot de passe de la base de données si une chaîne de connexion a été exposée.
