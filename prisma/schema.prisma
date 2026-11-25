@@ -1,0 +1,87 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// الأدوار المتاحة في النظام
+enum Role {
+  ADMIN
+  SECURITY
+}
+
+// حالات الحضور اليومي
+enum StatutPointage {
+  PRESENT
+  RETARD
+  ABSENT
+  CONGE
+}
+
+// 1. جدول المستخدمين (المدير + رجال الأمن 1، 2، 3، 4...)
+model User {
+  id            String     @id @default(cuid())
+  nom           String
+  username      String     @unique
+  passwordHash  String
+  role          Role       @default(SECURITY)
+  actif         Boolean    @default(true)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  // تتبع من قام بتسجيل الحضور (Audit)
+  pointagesEnregistres Pointage[] @relation("RecordedBy")
+}
+
+// 2. جدول الموظفين
+model Employee {
+  id            String     @id @default(cuid())
+  matricule     String     @unique
+  nomComplet    String
+  poste         String
+  departement   String
+  actif         Boolean    @default(true)
+  dateEmbauche  DateTime   @default(now())
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  pointages     Pointage[]
+}
+
+// 3. جدول الحضور اليومي (Pointages)
+model Pointage {
+  id              String         @id @default(cuid())
+  employeeId      String
+  employee        Employee       @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  
+  datePointage    DateTime       // تاريخ اليوم (بدون ساعة لتسهيل الفلترة)
+  heureEntree     String?        // مثال: "08:25"
+  heureSortie     String?        // مثال: "17:30"
+  
+  minutesRetard   Int            @default(0)
+  statut          StatutPointage @default(PRESENT)
+  estEnRetard     Boolean        @default(false) // true = أحمر، false = أخضر
+  remarque        String?
+
+  // الحارس الذي سجل الحركة
+  enregistreParId String?
+  enregistrePar   User?          @relation("RecordedBy", fields: [enregistreParId], references: [id], onDelete: SetNull)
+
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  // منع تكرار تسجيل نفس الموظف مرتين في نفس اليوم
+  @@unique([employeeId, datePointage])
+}
+
+// 4. جدول الإعدادات اليدوية للوقت (يعدله المدير فقط)
+model Settings {
+  id                    String   @id @default("default_settings")
+  heureEntreeStandard   String   @default("08:30") // الوقت المرجعي للدخول
+  heureSortieStandard   String   @default("17:30") // الوقت المرجعي للخروج
+  margeToleranceMinutes Int      @default(0)       // هامش التسامح بالدقائق
+  updatedAt             DateTime @updatedAt
+}
