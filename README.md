@@ -1,4 +1,4 @@
-# Gestionnaire de Pointage (نظام تدبير الحضور والانضباط)
+# Gestionnaire de Pointage 
 
 Application web full-stack de gestion du pointage quotidien avec contrôle d'accès basé sur les rôles (**ADMIN** et **SECURITY**), interface bilingue **Arabe / Français** (RTL / LTR), thèmes **Sombre / Clair** (Dark / Light), et design **Liquid Glass** adapté aux mobiles et ordinateurs.
 
